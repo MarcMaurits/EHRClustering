@@ -2,12 +2,12 @@
 library(ggplot2)
 library(ggrepel)
 
-source("Functions.R")
+source("Scripts/Functions.R")
 
-load("/PHShome/mom41/Clustering/dat_em.RData")
-load("/PHShome/mom41/Clustering/dat_bg.RData")
-load("/PHShome/mom41/Clustering/set_cols.RData")
-load("/PHShome/mom41/Clustering/dat_uc.RData")
+load("/PHShome/mom41/Clustering/R_saves/dat_em.RData")
+load("/PHShome/mom41/Clustering/R_saves/dat_bg.RData")
+load("/PHShome/mom41/Clustering/R_saves/set_cols.RData")
+load("/PHShome/mom41/Clustering/R_saves/dat_uc.RData")
 
 pdf("headache_prevalence.pdf", width = 10)
 

@@ -137,7 +137,7 @@ calculateCorrelations <- function(Cluster, Dat, EM, Sets){
 #Requires ggplot2, gridExtra
 #phecodes_complete
 #Expression matrices to be calculated beforehand
-createPheSpec_multi <- function(N=1, Clusters, Dat, EM, BG, Sets, Tsne, Filter=NULL, Tops=NULL){
+createPheSpec_multi <- function(N=1, Clusters, Dat, EM, BG, Sets, Tsne, Filter=NULL, Tops=NULL, redpos=F){
   #col_rb <- c(rainbow(length(unique(phecodes_complete$Category))), "lightgrey", "grey")
   col_rb <- c(viridis_pal(option = "D")(length(unique(phecodes_complete$Category))), "lightgrey")
   names(col_rb) <- c(unique(as.character(phecodes_complete$Category)), "Unknown")
@@ -266,7 +266,7 @@ createPheSpec_multi <- function(N=1, Clusters, Dat, EM, BG, Sets, Tsne, Filter=N
     })
     names(CorMain) <- names(Sets)
     
-    SetLabels <- paste0(1:length(SetOrder), ". ", SetOrder, "\nSize = ", Sizes[SetOrder], " Cor = ", round(CorMain[SetOrder], 2))
+    SetLabels <- paste0(1:length(SetOrder), ". ", SetOrder, "\nN = ", Sizes[SetOrder], " Cor = ", round(CorMain[SetOrder], 2))
     names(SetLabels) <- SetOrder
 
     SetPlot <- melt(do.call("rbind", Sets))
@@ -326,7 +326,7 @@ createPheSpec_multi <- function(N=1, Clusters, Dat, EM, BG, Sets, Tsne, Filter=N
           legend.position = "none") +
     scale_y_continuous(expand = c(0,0),
                        limits = c(0,1.2)) +
-    labs(title = paste0("Remaining Datasets Cluster ", Clusters[x]),
+    labs(title = paste0("Separate Datasets Cluster ", Clusters[x]),
          x = "PheCode",
          y = "Frequency")
                  
@@ -340,7 +340,7 @@ createPheSpec_multi <- function(N=1, Clusters, Dat, EM, BG, Sets, Tsne, Filter=N
          x = "",
          y = "")
          
-    p4 <- highlightClusters(Tsne, Dat, Clusters[x], add.rug = T, add.legend = F)
+    p4 <- highlightClusters(Tsne, Dat, Clusters[x], add.rug = T, add.legend = F, red = redpos)
                 
 	  grid.arrange(p1, m1,
                  p2, arrangeGrob(p3, p4, nrow = 2),
@@ -351,7 +351,7 @@ createPheSpec_multi <- function(N=1, Clusters, Dat, EM, BG, Sets, Tsne, Filter=N
   })
 }
 
-createPheSpec_png <- function(N=1, Clusters, Dat, EM, BG, Sets, Tsne, Name=paste0(format(Sys.Date(), "%Y%d%m"), "_phespecs")){
+createPheSpec_png <- function(N=1, Clusters, Dat, EM, BG, Sets, Tsne, Filter=NULL, Tops=NULL, Name=paste0(format(Sys.Date(), "%Y%d%m"), "_phespecs")){
   
   col_rb <- c(viridis_pal(option = "D")(length(unique(phecodes_complete$Category))), "lightgrey")
   names(col_rb) <- c(unique(as.character(phecodes_complete$Category)), "Unknown")
@@ -451,10 +451,19 @@ createPheSpec_png <- function(N=1, Clusters, Dat, EM, BG, Sets, Tsne, Name=paste
     } else {
       Mat <- PlotDF
     }
-    Mat <- Mat[order(Mat$Freq, decreasing = T), c("Code", "Freq", "Label")][1:10,]
+    if(is.null(Tops)){
+      Mat <- Mat[order(Mat$Freq, decreasing = T), c("Code", "Freq", "Label")][1:10,]
+    } else {
+      Tops <- Tops[[Clusters[x]]][,1]
+      Mat <- Mat[order(Mat$Freq, decreasing = T), c("Code", "Freq", "Label")]
+      Mat <- Mat[Mat$Code %in% Tops,]
+      Mat <- Mat[1:min(length(Tops),10),]
+    }
+
     Mat <- Mat[,c("Code", "Freq", "Label")]
     Mat$Freq <- round(as.numeric(Mat$Freq), digits = 2)
     Mat$Label <- ifelse(nchar(Mat$Label) > 43, paste0(substring(Mat$Label, 1, 40), "..."), Mat$Label)
+    Mat <- Mat[complete.cases(Mat),]   
     m1 <- tableGrob(Mat, rows = NULL, theme = mytheme)
     
     included_codes <- PlotDF
@@ -471,7 +480,7 @@ createPheSpec_png <- function(N=1, Clusters, Dat, EM, BG, Sets, Tsne, Name=paste
     })
     names(CorMain) <- names(Sets)
     
-    SetLabels <- paste0(1:length(SetOrder), ". ", SetOrder, "\nSize = ", Sizes[SetOrder], " Cor = ", round(CorMain[SetOrder], 2))
+    SetLabels <- paste0(1:length(SetOrder), ". ", SetOrder, "\nN = ", Sizes[SetOrder], " Cor = ", round(CorMain[SetOrder], 2))
     names(SetLabels) <- SetOrder
 
     SetPlot <- melt(do.call("rbind", Sets))
@@ -529,7 +538,7 @@ createPheSpec_png <- function(N=1, Clusters, Dat, EM, BG, Sets, Tsne, Name=paste
           legend.position = "none") +
     scale_y_continuous(expand = c(0,0),
                        limits = c(0,1.2)) +
-    labs(title = paste0("Remaining Datasets Cluster ", Clusters[x]),
+    labs(title = paste0("Separate Datasets Cluster ", Clusters[x]),
          x = "PheCode",
          y = "Frequency")
                  
@@ -569,7 +578,7 @@ createPheSpec_png <- function(N=1, Clusters, Dat, EM, BG, Sets, Tsne, Name=paste
   dev.off()
 }
 
-highlightClusters <- function(tsne, clmatch, cl, add.rug=FALSE, add.legend=TRUE, size=0.1){
+highlightClusters <- function(tsne, clmatch, cl, add.rug=FALSE, add.legend=TRUE, size=0.1, red=FALSE){
   clmatch <- clmatch[!duplicated(clmatch$ID), c("ID", "Cluster")]
   dat <- merge(tsne$Y, clmatch, by.x = "row.names", by.y = "ID")
   colnames(dat) <- c("ID", "X", "Y", "Cluster")	
@@ -584,6 +593,12 @@ highlightClusters <- function(tsne, clmatch, cl, add.rug=FALSE, add.legend=TRUE,
   } else {
     col_pal <- c("grey", "purple4")
   }
+  
+  if(red){
+    dat <- dat[!dat$Cluster %in% "Other",]
+    col_pal <- c("purple4")
+  }
+  
 	p <- ggplot(dat, aes(x = X, y = Y, colour = Cluster)) +
 	geom_point(size = size) +
 	theme_classic() +
@@ -1002,6 +1017,40 @@ createPrevalenceVolcano <- function(Code, EM, Set, UC, BG, Top=10){
          y = "Prevalence within cluster")
     
   print(p)
+}
+
+extractPRClusters <- function(Code, EM, Set, UC, BG, Top=10){
+  if(!missing(Set)){
+    Dat <- EM[[Set]]
+    Dat <- Dat[-which(is.na(names(Dat)))]
+  } else {
+    Dat <- lapply(levels(UC$Cluster), function(x){
+      table(UC[UC$Cluster == x, "PheCode"])/length(unique(UC[UC$Cluster == x, "ID"]))
+    })
+    names(Dat) <- levels(UC$Cluster)
+  }
+  if(missing(Set)) Set <- "Combined"
+      
+  set_cols["Combined"] <- "purple4"
+  
+  res <- data.frame()
+  
+  invisible(   
+  code_ranks <- sapply(1:length(Dat), function(x){
+    tmp <- as.vector(Dat[[x]])
+    names(tmp) <- names(Dat[[x]])
+    res[x, "Cluster"] <<- names(Dat)[x]
+    res[x, "Prev"] <<- tmp[[Code]]
+    res[x, "Rank"] <<- rank(-tmp, ties.method = "min")[[Code]]
+  })
+  )
+  
+  res <- subset(res, Rank <= Top)
+  res <- subset(res, Prev >= BG[[Code]])
+  
+  if(length(which(!is.finite(res$Prev))) > 0) res <- res[-which(!is.finite(res$Prev)),]
+  
+  return(res$Cluster)
 }
 
 extractCenters <- function(tsne, dat){
