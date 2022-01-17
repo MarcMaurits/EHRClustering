@@ -8,7 +8,7 @@ library(viridis)
 library(dplyr)
 library(png)
 
-load("/PHShome/mom41/Clustering/R_saves/top10_EN.RData")
+load("/PHShome/mom41/Clustering/R_saves/top10_EN_abs.RData")
 
 source("/PHShome/mom41/Clustering/Scripts/Functions.R")
 
@@ -83,7 +83,7 @@ names(excl_codes) <- unique(dat_excl$Code)
 excl_codes <- excl_codes[excl_codes >= length(levels(dat$Cluster))*(1-((Top - 1)/Top))]
 
 pdf(file = paste0("/PHShome/mom41/Clustering/Outputs/", format(Sys.Date(), "%Y%m%d"), "_phespecs.pdf"), width = 10)
-invisible(createPheSpec_multi(N = length(levels(dat$Cluster)), Clusters = levels(dat$Cluster), Dat = dat, EM = dat_em, Sets = id_set_match, BG = dat_bg, Tsne = dat_tsne, redpos = T))
+invisible(createPheSpec_multi(N = length(levels(dat$Cluster)), Clusters = levels(dat$Cluster), Dat = dat, EM = dat_em, Sets = id_set_match, BG = dat_bg, Tsne = dat_tsne, Filter = names(excl_codes), Tops = top10, redpos = T))
 dev.off()
 
 
@@ -96,11 +96,11 @@ invisible(createPheSpec_multi(N = 10, Clusters = c("30", "65", "69", "70", "91",
 dev.off()
 
 #png version
-invisible(createPheSpec_png(N = length(levels(dat$Cluster)), Clusters = levels(dat$Cluster), Dat = dat, EM = dat_em, Sets = id_set_match, BG = dat_bg, Tsne = dat_tsne, Filter = names(excl_codes), Tops = top10, Name = "png_phespecs"))
+invisible(createPheSpec_multi(N = length(levels(dat$Cluster)), Clusters = levels(dat$Cluster), Dat = dat, EM = dat_em, Sets = id_set_match, BG = dat_bg, Tsne = dat_tsne, Filter = names(excl_codes), Tops = top10, Name = "png_phespecs"))
 
 #Test
 pdf(file = paste0("/PHShome/mom41/Clustering/Outputs/TEST.pdf"), width = 10)
-invisible(createPheSpec_multi(N = 10, Clusters = c("30", "65", "69", "70", "91", "103"), Dat = dat, EM = dat_em, Sets = id_set_match, Tsne = dat_tsne, BG = dat_bg))
+invisible(createPheSpec_png(N = length(levels(dat$Cluster)), Clusters = levels(dat$Cluster), Dat = dat, EM = dat_em, Sets = id_set_match, Tsne = dat_tsne, BG = dat_bg, Filter = names(excl_codes), Tops = top10))
 dev.off()
 
 

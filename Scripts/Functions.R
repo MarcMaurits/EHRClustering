@@ -6,7 +6,7 @@ createTableOne <- function(dat, dem, setmatch){
     demdat <- dem[dem$SUBJECT_ID %in% setmatch[setmatch$Set == x, "ID"],]
     
     res1 <- nrow(setdat)
-    res2 <- length(ids)
+    res2 <- length(unique(setdat$ID))
     res3 <- length(unique(setdat$PheCode))
     
     res4 <- round(table(demdat$SEX)["C46110"]/nrow(demdat),2)
@@ -205,8 +205,12 @@ createPheSpec_multi <- function(N=1, Clusters, Dat, EM, BG, Sets, Tsne, Filter=N
   names(col_sets) <- SetOrder
   
   mytheme <- gridExtra::ttheme_default(
-    core = list(fg_params=list(cex = 0.6)),
-    colhead = list(fg_params=list(cex = 0.6)),
+    core = list(fg_params=list(cex = 0.6),
+                bg_params=list(fill = "white",
+                               col = "black")),
+    colhead = list(fg_params=list(cex = 0.6),
+                   bg_params=list(fill = "white",
+                                  col = "white")),
     rowhead = list(fg_params=list(cex = 0.6)))
     
   invisible({
@@ -233,24 +237,43 @@ createPheSpec_multi <- function(N=1, Clusters, Dat, EM, BG, Sets, Tsne, Filter=N
     PlotDF$Cat <- factor(PlotDF$Cat, levels = c(unique(as.character(phecodes_complete$Category)), "Unknown"))
     PlotDF$Code <- factor(PlotDF$Code, levels = unique(PlotDF$Code))   
     
-    if(!is.null(Filter)){
-      Mat <- PlotDF[!PlotDF$Code %in% Filter,]
-    } else {
-      Mat <- PlotDF
-    }
+    Mat <- PlotDF
+
     if(is.null(Tops)){
       Mat <- Mat[order(Mat$Freq, decreasing = T), c("Code", "Freq", "Label")][1:10,]
+      Mat_col <- rep(FALSE, 10)
     } else {
+      Neg_coef <- Tops[[Clusters[x]]][which(Tops[[Clusters[x]]][,2] < 0), 1]
       Tops <- Tops[[Clusters[x]]][,1]
       Mat <- Mat[order(Mat$Freq, decreasing = T), c("Code", "Freq", "Label")]
       Mat <- Mat[Mat$Code %in% Tops,]
       Mat <- Mat[1:min(length(Tops),10),]
+      Mat <- Mat[complete.cases(Mat),]
+      Mat_col <- which(Mat$Code %in% Neg_coef)
     }
     Mat <- Mat[,c("Code", "Freq", "Label")]
     Mat$Freq <- round(as.numeric(Mat$Freq), digits = 2)
     Mat$Label <- ifelse(nchar(Mat$Label) > 43, paste0(substring(Mat$Label, 1, 40), "..."), Mat$Label)
-    Mat <- Mat[complete.cases(Mat),]
     m1 <- tableGrob(Mat, rows = NULL, theme = mytheme)
+    
+    if(!is.null(Tops)){
+      find_cell <- function(table, row, col, name="core-bg"){
+        l <- table$layout
+        which(l$t==row+1 & l$l==col & l$name==name)
+      }
+    
+      ind <- sapply(Mat_col, function(x){
+        sapply(1:3, function(y){
+          find_cell(m1, x, y)
+        })
+      })
+    
+      invisible(
+        lapply(as.vector(ind), function(x){
+          m1$grobs[x][[1]][["gp"]] <<- gpar(fill = "lightgrey")
+        })
+      )
+    }
     
     included_codes <- PlotDF
     if(!is.null(Filter)) included_codes <- included_codes[!included_codes$Code %in% Filter,]
@@ -266,7 +289,7 @@ createPheSpec_multi <- function(N=1, Clusters, Dat, EM, BG, Sets, Tsne, Filter=N
     })
     names(CorMain) <- names(Sets)
     
-    SetLabels <- paste0(1:length(SetOrder), ". ", SetOrder, "\nN = ", Sizes[SetOrder], " Cor = ", round(CorMain[SetOrder], 2))
+    SetLabels <- paste0(SetOrder, "\nN = ", Sizes[SetOrder], " Cor = ", round(CorMain[SetOrder], 2))
     names(SetLabels) <- SetOrder
 
     SetPlot <- melt(do.call("rbind", Sets))
@@ -418,10 +441,14 @@ createPheSpec_png <- function(N=1, Clusters, Dat, EM, BG, Sets, Tsne, Filter=NUL
   names(col_sets) <- SetOrder
   
   mytheme <- gridExtra::ttheme_default(
-    core = list(fg_params=list(cex = 0.6)),
-    colhead = list(fg_params=list(cex = 0.6)),
+    core = list(fg_params=list(cex = 0.6),
+                bg_params=list(fill = "white",
+                               col = "black")),
+    colhead = list(fg_params=list(cex = 0.6),
+                   bg_params=list(fill = "white",
+                                  col = "white")),
     rowhead = list(fg_params=list(cex = 0.6)))
-    
+     
   invisible({
     lapply(1:min(c(N, length(Clusters))), function(x){
     print(paste0("Creating PheSpec for Cluster ", Clusters[x]))
@@ -446,25 +473,43 @@ createPheSpec_png <- function(N=1, Clusters, Dat, EM, BG, Sets, Tsne, Filter=NUL
     PlotDF$Cat <- factor(PlotDF$Cat, levels = c(unique(as.character(phecodes_complete$Category)), "Unknown"))
     PlotDF$Code <- factor(PlotDF$Code, levels = unique(PlotDF$Code))   
     
-    if(!is.null(Filter)){
-      Mat <- PlotDF[!PlotDF$Code %in% Filter,]
-    } else {
-      Mat <- PlotDF
-    }
+    Mat <- PlotDF
+
     if(is.null(Tops)){
       Mat <- Mat[order(Mat$Freq, decreasing = T), c("Code", "Freq", "Label")][1:10,]
+      Mat_col <- rep(FALSE, 10)
     } else {
+      Neg_coef <- Tops[[Clusters[x]]][which(Tops[[Clusters[x]]][,2] < 0), 1]
       Tops <- Tops[[Clusters[x]]][,1]
       Mat <- Mat[order(Mat$Freq, decreasing = T), c("Code", "Freq", "Label")]
       Mat <- Mat[Mat$Code %in% Tops,]
       Mat <- Mat[1:min(length(Tops),10),]
+      Mat <- Mat[complete.cases(Mat),]
+      Mat_col <- which(Mat$Code %in% Neg_coef)
     }
-
     Mat <- Mat[,c("Code", "Freq", "Label")]
     Mat$Freq <- round(as.numeric(Mat$Freq), digits = 2)
     Mat$Label <- ifelse(nchar(Mat$Label) > 43, paste0(substring(Mat$Label, 1, 40), "..."), Mat$Label)
-    Mat <- Mat[complete.cases(Mat),]   
     m1 <- tableGrob(Mat, rows = NULL, theme = mytheme)
+    
+    if(!is.null(Tops)){
+      find_cell <- function(table, row, col, name="core-bg"){
+        l <- table$layout
+        which(l$t==row+1 & l$l==col & l$name==name)
+      }
+    
+      ind <- sapply(Mat_col, function(x){
+        sapply(1:3, function(y){
+          find_cell(m1, x, y)
+        })
+      })
+    
+      invisible(
+        lapply(as.vector(ind), function(x){
+          m1$grobs[x][[1]][["gp"]] <<- gpar(fill = "lightgrey")
+        })
+      )
+    }
     
     included_codes <- PlotDF
     if(!is.null(Filter)) included_codes <- included_codes[!included_codes$Code %in% Filter,]

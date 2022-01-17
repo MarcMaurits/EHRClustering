@@ -29,7 +29,7 @@ load("R_saves/phecodes_complete.RData")
 load("R_saves/plot_lisi_raw.RData")
 load("R_saves/set_cols.RData")
 load("R_saves/dat_harm.RData")
-load("R_saves/top10_EN.RData")
+load("R_saves/top10_EN_abs.RData")
 load("R_saves/dat_umap.RData")
 load("R_saves/graph_key.RData")
 
@@ -199,6 +199,6 @@ invisible(createPheSpec_multi(N = length(levels(dat_sub$Cluster)), Clusters = le
 dev.off()
 
 pdf("/PHShome/mom41/Clustering/plots_paper/phespecs_all.pdf", width = 10)
-invisible(createPheSpec_multi(N = length(levels(dat_clust$Cluster)), Clusters = levels(dat_clust$Cluster), Dat = dat_clust, EM = dat_em, Sets = id_set_match, BG = dat_bg, Tsne = dat_tsne, Filter = names(excl_codes), Top = top10))
+invisible(createPheSpec_multi(N = length(levels(dat_clust$Cluster)), Clusters = levels(dat_clust$Cluster), Dat = dat_clust, EM = dat_em, Sets = id_set_match, BG = dat_bg, Tsne = dat_tsne, Filter = names(excl_codes), Top = top10, redpos = T))
 dev.off()
 

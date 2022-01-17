@@ -52,21 +52,21 @@ save(dat, file = "/PHShome/mom41/Clustering/dat.RData")
 id_set_match <- data.frame(ID = unique(dat$ID), 
                            Set = NA)
 
-id_set_match[grep("^16", id_set_match$ID), "Set"] <- "Marshfield"
-id_set_match[grep("^23", id_set_match$ID), "Set"] <- "Boston Childrens"
-id_set_match[grep("^27", id_set_match$ID), "Set"] <- "Vanderbilt"
-id_set_match[grep("^38", id_set_match$ID), "Set"] <- "Kaiser Permanente"
-id_set_match[grep("^42", id_set_match$ID), "Set"] <- "Columbia"
-id_set_match[grep("^49", id_set_match$ID), "Set"] <- "Mayo"
-id_set_match[grep("^52", id_set_match$ID), "Set"] <- "Northwestern"
-id_set_match[grep("^63", id_set_match$ID), "Set"] <- "Geisinger"
-id_set_match[grep("^68", id_set_match$ID), "Set"] <- "Mass General Brigham"
-id_set_match[grep("^74", id_set_match$ID), "Set"] <- "Mt Sinai"
-id_set_match[grep("^81", id_set_match$ID), "Set"] <- "Cincinnati Childrens"
-id_set_match[grep("^88", id_set_match$ID), "Set"] <- "Meharry"
-id_set_match[grep("^95", id_set_match$ID), "Set"] <- "CHOP"
+id_set_match[grep("^16", id_set_match$ID), "Set"] <- "Dataset 7"
+id_set_match[grep("^23", id_set_match$ID), "Set"] <- "Dataset 12"
+id_set_match[grep("^27", id_set_match$ID), "Set"] <- "Dataset 2"
+id_set_match[grep("^38", id_set_match$ID), "Set"] <- "Dataset 9"
+id_set_match[grep("^42", id_set_match$ID), "Set"] <- "Dataset 11"
+id_set_match[grep("^49", id_set_match$ID), "Set"] <- "Dataset 4"
+id_set_match[grep("^52", id_set_match$ID), "Set"] <- "Dataset 8"
+id_set_match[grep("^63", id_set_match$ID), "Set"] <- "Dataset 10"
+id_set_match[grep("^68", id_set_match$ID), "Set"] <- "Dataset 1"
+id_set_match[grep("^74", id_set_match$ID), "Set"] <- "Dataset 5"
+id_set_match[grep("^81", id_set_match$ID), "Set"] <- "Dataset 6"
+id_set_match[grep("^88", id_set_match$ID), "Set"] <- "Dataset 13"
+id_set_match[grep("^95", id_set_match$ID), "Set"] <- "Dataset 3"
 
-save(id_set_match, file = "id_set_match.RData")
+save(id_set_match, file = "/PHShome/mom41/Clustering/R_saves/id_set_match.RData")
 
 #Creating matrix
 dat$PheCode <- as.factor(dat$PheCode)
@@ -82,34 +82,34 @@ m <- t(m)
 dat_harm <- HarmonyMatrix(m, id_set_match$Set, do_pca = T, npcs = 500)
 rownames(dat_harm) <- id_set_match$ID
 
-save(dat_harm, file = "/PHShome/mom41/Clustering/dat_harm.RData")
+save(dat_harm, file = "/PHShome/mom41/Clustering/R_saves/dat_harm.RData")
 
 #Phenograph
 dat_graph <- Rphenograph(dat_harm)
 
-save(dat_graph, file = "/PHShome/mom41/Clustering/dat_graph.RData")
+save(dat_graph, file = "/PHShome/mom41/Clustering/R_saves/dat_graph.RData")
 
 graph_key <- cbind(rownames(dat_harm)[as.numeric(dat_graph[[2]]$name)], dat_graph[[2]]$membership)
 
-save(graph_key, file = "/PHShome/mom41/Clustering/graph_key.RData")
+save(graph_key, file = "/PHShome/mom41/Clustering/R_saves/graph_key.RData")
 
 #Clustering data
 dat_clust <- merge(dat, graph_key, by.x = "ID", by.y = 1, all.x = T)
 
 colnames(dat_clust)[4] <- "Cluster"
 
-save(dat_clust, file = "/PHShome/mom41/Clustering/dat_clust.RData")
+save(dat_clust, file = "/PHShome/mom41/Clustering/R_saves/dat_clust.RData")
 
 #Embedding
 dat_tsne <- Rtsne(dat_harm, dims = 2, perplexity = 30, verbose = F, max_iter = 5000, check_duplicates = F, pca = F, num_threads = 0)
 
 rownames(dat_tsne$Y) <- rownames(dat_harm)
 
-save(dat_tsne, file = "/PHShome/mom41/Clustering/dat_tsne.RData")
+save(dat_tsne, file = "/PHShome/mom41/Clustering/R_saves/dat_tsne.RData")
 
 dat_umap <- umap(dat_harm)
 
-save(dat_umap, file = "/PHShome/mom41/Clustering/dat_umap.RData")
+save(dat_umap, file = "/PHShome/mom41/Clustering/R_saves/dat_umap.RData")
 
 #Visualise
 colourset <- colors(distinct = T)
@@ -139,7 +139,7 @@ plot_umap <- merge(plot_umap, id_set_match, by = "ID")
 
 plot_umap$Cluster <- as.factor(plot_umap$Cluster)
 
-pdf(file = "embedding_plots.pdf")
+pdf(file = "/PHShome/mom41/Clustering/Outputs/embedding_plots.pdf")
 #TSNE
 plot_tsne <- plot_tsne[sample.int(nrow(plot_tsne)),]
 
