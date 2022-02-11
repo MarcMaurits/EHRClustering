@@ -2,7 +2,7 @@
 <html>
 <body>
 
-<h1>EMR Clustering Methodology README</h1>
+<h1>EHR Clustering Methodology README</h1>
 
 <h2>Pipeline</h2>
 <p>In order to combat center specific batch effects from driving the clustering more than phenotypic similarity, we apply batch correction with <a href = "https://github.com/immunogenomics/harmony">Harmony</a>. We use <a href = "https://github.com/JinmiaoChenLab/Rphenograph">the R implementation of phenograph</a> with default values to construct a knn-graph and to cluster using the Louvain community detection algorithm. Clusters are subsequently summarised and visualised using our novel PheSpec compositions (for details, see ["Example PheSpecs"](#example-phespecs) further down). In case of expected remaining heterogeneity, clustering can be repeated on individual clusters. A standalone PheSpec implementation is currently under development.</p>
